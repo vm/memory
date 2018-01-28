@@ -2,5 +2,26 @@
 
 @import "bootstrap";
 
-.side { padding: 4ex; text-align: center; }
-h1 { text-align: center; }
+.memory-game-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.memory-game-tile {
+  width: 25%;
+  padding: 4ex;
+  text-align: center;
+  border: 1px solid black;
+}
+
+.memory-game-tile button {
+  opacity: 0;
+}
+
+.memory-game-tile:hover button {
+  opacity: 1;
+}
+
+h1 {
+  text-align: center;
+}
