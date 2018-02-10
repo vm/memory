@@ -25,25 +25,15 @@ class Demo extends React.Component {
         game['loaded'] = true
         this.setState(game)
       })
-      .receive("error", resp => { console.log("Unable to join", resp) });
     this.toggle = this.toggle.bind(this);
     this.afterToggle = this.afterToggle.bind(this);
     this.reset = this.reset.bind(this);
   }
 
   reset() {
-    this.setState({
-      clicks: 0,
-      completed: [],
-      checkIndex: undefined,
-      confirmIndex: undefined,
-      letters: this.randomizeLetters(),
-    })
-  }
-
-  randomizeLetters() {
-    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    return _.shuffle(letters.concat(letters));
+    this.channel
+      .push('reset')
+      .receive('ok', ({ game }) => this.setState(game));
   }
 
   afterToggle() {
