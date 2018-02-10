@@ -3,20 +3,29 @@ import ReactDOM from 'react-dom';
 import { Button } from 'reactstrap';
 import _ from 'lodash/fp'
 
-export default function run_demo(root) {
-  ReactDOM.render(<Demo/>, root);
+export default function run_demo(root, channel) {
+  ReactDOM.render(<Demo channel={channel}/>, root);
 }
 
 class Demo extends React.Component {
   constructor(props) {
     super(props);
+    this.channel = props.channel;
     this.state = {
-      clicks: 0,
-      letters: this.randomizeLetters(),
-      completed: [],
+      loaded: false,
+      clicks: undefined,
+      letters: undefined,
+      completed: undefined,
       checkIndex: undefined,
       confirmIndex: undefined,
     };
+    this.channel
+      .join()
+      .receive("ok", ({ game }) => {
+        game['loaded'] = true
+        this.setState(game)
+      })
+      .receive("error", resp => { console.log("Unable to join", resp) });
     this.toggle = this.toggle.bind(this);
     this.afterToggle = this.afterToggle.bind(this);
     this.reset = this.reset.bind(this);
@@ -53,12 +62,12 @@ class Demo extends React.Component {
 
   toggle(i) {
     const { clicks, confirmIndex, checkIndex } = this.state;
-    if (_.isUndefined(checkIndex)) {
+    if (_.isNil(checkIndex)) {
       this.setState({
         checkIndex: i,
         clicks: clicks + 1,
       })
-    } else if (_.isUndefined(confirmIndex)) {
+    } else if (_.isNil(confirmIndex)) {
       this.setState({
         confirmIndex: i,
         clicks: clicks + 1,
@@ -67,7 +76,8 @@ class Demo extends React.Component {
   }
 
   render() {
-    const { letters, clicks, completed, checkIndex, confirmIndex } = this.state;
+    const { letters, clicks, completed, checkIndex, confirmIndex, loaded } = this.state;
+    if (!loaded) return false
     return (
       <div className="memory-game">
         <div>clicks {clicks}</div>
