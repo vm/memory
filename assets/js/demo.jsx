@@ -38,31 +38,21 @@ class Demo extends React.Component {
 
   afterToggle() {
     const { confirmIndex, checkIndex, letters, completed } = this.state;
-    const interval = setInterval(() => {
-      this.setState({
-        completed: letters[confirmIndex] === letters[checkIndex]
-          ? completed.concat([letters[checkIndex]])
-          : completed,
-        checkIndex: undefined,
-        confirmIndex: undefined,
-      });
-    }, 1000);
-    setTimeout(() => clearInterval(interval), 1000)
+    if (!_.isNil(confirmIndex) && !_.isNil(checkIndex)) {
+      const interval = setInterval(() => {
+        this.channel
+          .push('clear_indices')
+          .receive('ok', ({ game }) => this.setState(game));
+      }, 1000);
+      setTimeout(() => clearInterval(interval), 1000);
+    }
   }
 
   toggle(i) {
     const { clicks, confirmIndex, checkIndex } = this.state;
-    if (_.isNil(checkIndex)) {
-      this.setState({
-        checkIndex: i,
-        clicks: clicks + 1,
-      })
-    } else if (_.isNil(confirmIndex)) {
-      this.setState({
-        confirmIndex: i,
-        clicks: clicks + 1,
-      }, this.afterToggle);
-    }
+    this.channel
+      .push('toggle', { index: i })
+      .receive('ok', ({ game }) => this.setState(game, this.afterToggle));
   }
 
   render() {
