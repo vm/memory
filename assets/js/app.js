@@ -23,11 +23,12 @@ import socket from "./socket"
 import run_demo from "./demo";
 
 function init() {
-  let root = document.getElementById('game');
-  let channel = socket.channel("games:" + 'meow', {});
-  run_demo(root, channel);
+  let root = document.getElementById('root');
+  if (root) {
+    let channel = socket.channel("games:" + window.gameName, {});
+    run_demo(root, channel);
+  }
 }
 
 // Use jQuery to delay until page loaded.
 $(init);
-
