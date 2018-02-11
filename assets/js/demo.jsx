@@ -3,71 +3,61 @@ import ReactDOM from 'react-dom';
 import { Button } from 'reactstrap';
 import _ from 'lodash/fp'
 
-export default function run_demo(root) {
-  ReactDOM.render(<Demo/>, root);
+export default function run_demo(root, channel) {
+  ReactDOM.render(<Demo channel={channel}/>, root);
 }
 
 class Demo extends React.Component {
   constructor(props) {
     super(props);
+    this.channel = props.channel;
     this.state = {
-      clicks: 0,
-      letters: this.randomizeLetters(),
-      completed: [],
+      loaded: false,
+      clicks: undefined,
+      letters: undefined,
+      completed: undefined,
       checkIndex: undefined,
       confirmIndex: undefined,
     };
+    this.channel
+      .join()
+      .receive("ok", ({ game }) => {
+        game['loaded'] = true
+        this.setState(game)
+      })
     this.toggle = this.toggle.bind(this);
     this.afterToggle = this.afterToggle.bind(this);
     this.reset = this.reset.bind(this);
   }
 
   reset() {
-    this.setState({
-      clicks: 0,
-      completed: [],
-      checkIndex: undefined,
-      confirmIndex: undefined,
-      letters: this.randomizeLetters(),
-    })
-  }
-
-  randomizeLetters() {
-    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    return _.shuffle(letters.concat(letters));
+    this.channel
+      .push('reset')
+      .receive('ok', ({ game }) => this.setState(game));
   }
 
   afterToggle() {
     const { confirmIndex, checkIndex, letters, completed } = this.state;
-    const interval = setInterval(() => {
-      this.setState({
-        completed: letters[confirmIndex] === letters[checkIndex]
-          ? completed.concat([letters[checkIndex]])
-          : completed,
-        checkIndex: undefined,
-        confirmIndex: undefined,
-      });
-    }, 1000);
-    setTimeout(() => clearInterval(interval), 1000)
+    if (!_.isNil(confirmIndex) && !_.isNil(checkIndex)) {
+      const interval = setInterval(() => {
+        this.channel
+          .push('clear_indices')
+          .receive('ok', ({ game }) => this.setState(game));
+      }, 1000);
+      setTimeout(() => clearInterval(interval), 1000);
+    }
   }
 
   toggle(i) {
     const { clicks, confirmIndex, checkIndex } = this.state;
-    if (_.isUndefined(checkIndex)) {
-      this.setState({
-        checkIndex: i,
-        clicks: clicks + 1,
-      })
-    } else if (_.isUndefined(confirmIndex)) {
-      this.setState({
-        confirmIndex: i,
-        clicks: clicks + 1,
-      }, this.afterToggle);
-    }
+    this.channel
+      .push('toggle', { index: i })
+      .receive('ok', ({ game }) => this.setState(game, this.afterToggle));
   }
 
   render() {
-    const { letters, clicks, completed, checkIndex, confirmIndex } = this.state;
+    const { letters, clicks, completed, checkIndex, confirmIndex, loaded } = this.state;
+    if (!loaded) return false
     return (
       <div className="memory-game">
         <div>clicks {clicks}</div>

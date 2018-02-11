@@ -1,8 +1,5 @@
-<h1>Memory Game</h1>
-
-<div id="game">
-  Loading...
+<div>
+  <h1 id="index-page">Join a Game</h1>
+  <input type="text" id="game-name"/>
+  <button onclick="window.location.replace(window.location.origin + '/game/' + document.querySelectorAll('#game-name')[0].value)">Join</button>
 </div>
-
-
-
